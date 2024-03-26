@@ -27,16 +27,19 @@ class Pipeline():
 
     def transfer_data(self):
         try:
+            data = None
+            inference_result = None
+            if not self.capture_q.empty():
+                data = self.capture_q.get()
 
-            data = self.cap_node.get()
+            if data is not None and not self.in_inference_q.full():
+                self.in_inference_q.put(data)
 
-            if data is not None:
-                self.inference_node.put(data)
+            if not self.out_inference_q.empty():
+                inference_result = self.out_inference_q.get()
 
-            inference_result = self.inference_node.get()
-
-            if inference_result is not None:
-                self.server_node.put(inference_result)
+            if inference_result is not None and not self.server_q.full():
+                self.server_q.put(inference_result)
         
         except Exception as e:
             print(str(e))
